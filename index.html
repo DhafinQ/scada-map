@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SCADA Map Monitoring System</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body,
+        html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #0f172a;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            background: #000;
+        }
+
+        .scada-header {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 1000;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(8px);
+            color: #f8fafc;
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 8px #10b981;
+        }
+
+        .dot.error {
+            background: #ef4444;
+            box-shadow: 0 0 8px #ef4444;
+        }
+
+        .btn-config {
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .btn-config:hover {
+            background: #1d4ed8;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: #1e293b;
+            color: #f8fafc;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 900px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-header {
+            padding: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body {
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .modal-footer {
+            padding: 12px 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .node-card {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 14px;
+        }
+
+        .node-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 11px;
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+
+        .form-control {
+            width: 100%;
+            background: #1e293b;
+            border: 1px solid #475569;
+            color: #fff;
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .metric-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr 70px 30px;
+            gap: 6px;
+            margin-bottom: 6px;
+            align-items: center;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: #fff;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-secondary {
+            background: #475569;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: #fff;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        /* Marker Badge & Styles */
+        .custom-node-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .marker-pin {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid #ffffff;
+            box-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
+            position: relative;
+        }
+
+        .pin-on {
+            background: #10b981;
+        }
+
+        .pin-off {
+            background: #ef4444;
+        }
+
+        .pin-filled {
+            background: #3b82f6;
+        }
+
+        .pin-on::after {
+            content: "";
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            border: 2px solid #10b981;
+            animation: pulse 1.8s infinite ease-out;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(0.8);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(2.4);
+                opacity: 0;
+            }
+        }
+
+        /* Custom Popup SCADA */
+        .scada-popup .leaflet-popup-content-wrapper {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(6px);
+            color: #f8fafc;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        .scada-popup .leaflet-popup-tip {
+            background: rgba(15, 23, 42, 0.95);
+        }
+
+        .popup-box {
+            width: 270px;
+            max-height: 380px;
+            overflow-y: auto;
+            padding: 4px 6px;
+        }
+
+        .popup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 6px;
+            margin-bottom: 8px;
+        }
+
+        .popup-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #f8fafc;
+        }
+
+        .badge {
+            padding: 2px 7px;
+            font-size: 10px;
+            font-weight: 800;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .badge-on {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            border: 1px solid #10b981;
+        }
+
+        .badge-off {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 1px solid #ef4444;
+        }
+
+        .badge-filled {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            border: 1px solid #3b82f6;
+        }
+
+        .telemetry-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        .telemetry-table tr {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .telemetry-table td {
+            padding: 4px 2px;
+        }
+
+        .metric-label {
+            color: #94a3b8;
+        }
+
+        .metric-value {
+            text-align: right;
+            font-weight: 600;
+            color: #38bdf8;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .metric-unit {
+            color: #64748b;
+            font-size: 10px;
+            margin-left: 2px;
+        }
+
+        .last-update {
+            margin-top: 8px;
+            font-size: 10px;
+            color: #64748b;
+            text-align: right;
+        }
+
+        /* Toast Notification Container */
+        #toast-container {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .toast {
+            pointer-events: auto;
+            min-width: 260px;
+            max-width: 340px;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(8px);
+            color: #f8fafc;
+            padding: 12px 16px;
+            border-radius: 6px;
+            border-left: 4px solid #3b82f6;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            font-size: 13px;
+            transform: translateX(120%);
+            opacity: 0;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast.hide {
+            transform: translateX(120%);
+            opacity: 0;
+        }
+
+        /* Toast Variants */
+        .toast-success {
+            border-left-color: #10b981;
+        }
+
+        .toast-error {
+            border-left-color: #ef4444;
+        }
+
+        .toast-info {
+            border-left-color: #3b82f6;
+        }
+
+        .toast-warning {
+            border-left-color: #f59e0b;
+        }
+
+        .toast-close {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 14px;
+            line-height: 1;
+        }
+
+        .toast-close:hover {
+            color: #f8fafc;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Top Floating Header -->
+    <div class="scada-header">
+        <div class="status-indicator">
+            <div id="conn-dot" class="dot"></div>
+            <span id="conn-status">Connected</span>
+        </div>
+        <div>Nodes Active: <strong id="node-count" style="color:#38bdf8;">0</strong></div>
+        <div style="color: #64748b;">Sync: <span id="last-sync">-</span></div>
+        <button class="btn-config" onclick="openConfigModal()">⚙ Kelola Node & DB</button>
+    </div>
+
+    <div id="map"></div>
+
+    <div id="config-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Konfigurasi Node & Mapping Database</h3>
+                <button onclick="closeConfigModal()" class="btn-danger" style="padding: 2px 8px;">✕</button>
+            </div>
+            <div class="modal-body" id="modal-nodes-container"></div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="addNewNode()">+ Tambah Lokasi Node</button>
+                <button class="btn-success" onclick="saveConfiguration()">Simpan & Terapkan</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // 1. Inisialisasi Map
+        const map = L.map('map', {
+            center: [-7.0694, 107.7083],
+            zoom: 18,
+            zoomControl: false,
+            preferCanvas: true
+        });
+
+        // Pindahkan Zoom Control ke kanan bawah agar tidak tertutup SCADA Header
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+        // 2. Tile Layer: Google Satellite Murni (lyrs=s)
+        L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+            maxZoom: 21,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            attribution: 'Google Satellite'
+        }).addTo(map);
+
+        // 3. Tile Layer: CartoDB Labels (Overlay Transparan di atas satelit)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
+            subdomains: 'abcd',
+            maxZoom: 21,
+            pane: 'overlayPane'
+        }).addTo(map);
+
+        // 4. State Management (Marker Cache)
+        const markerCache = {};
+
+        let hasInitialFit = false;
+
+        function fitMapToNodes(nodes) {
+            if (!nodes || nodes.length === 0) return;
+
+            // Kumpulkan semua koordinat node yang valid
+            const latLngs = nodes
+                .filter(n => typeof n.lat === 'number' && typeof n.lng === 'number' && !isNaN(n.lat) && !isNaN(n.lng))
+                .map(n => [n.lat, n.lng]);
+
+            if (latLngs.length === 0) return;
+
+            const bounds = L.latLngBounds(latLngs);
+
+            // Otomatis atur center & zoom level dengan padding agar marker di pinggir tidak terpotong
+            map.fitBounds(bounds, {
+                padding: [60, 60], // Jarak margin aman dalam pixel dari tepi layar
+                maxZoom: 18,       // Batas maksimal zoom jika semua node terlalu berdekatan
+                animate: true,
+                duration: 0.8
+            });
+        }
+
+        function getPinClass(status) {
+            const s = (status || '').toUpperCase();
+            if (s === 'ON') return 'pin-on';
+            if (s === 'OFF') return 'pin-off';
+            return 'pin-filled';
+        }
+
+        function getBadgeClass(status) {
+            const s = (status || '').toUpperCase();
+            if (s === 'ON') return 'badge-on';
+            if (s === 'OFF') return 'badge-off';
+            return 'badge-filled';
+        }
+
+        function createIcon(status) {
+            return L.divIcon({
+                className: 'custom-node-icon',
+                html: `<div class="marker-pin ${getPinClass(status)}"></div>`,
+                iconSize: [16, 16],
+                iconAnchor: [8, 8],
+                popupAnchor: [0, -10]
+            });
+        }
+
+        function buildPopupHTML(node) {
+            let metricsRows = '';
+            if (node.json_data) {
+                for (const [key, metric] of Object.entries(node.json_data)) {
+                    let val = metric.value;
+                    if (typeof val === 'number') {
+                        val = Number.isInteger(val) ? val.toLocaleString('id-ID') : val.toFixed(3);
+                    }
+                    metricsRows += `
+        <tr>
+          <td class="metric-label">${metric.label}</td>
+          <td class="metric-value">
+            <span class="val-text" data-metric="${key}">${val}</span> 
+            <span class="metric-unit">${metric.unit || ''}</span>
+          </td>
+        </tr>`;
+                }
+            }
+
+            return `
+                <div class="popup-box" data-node-id="${node.id}">
+                <div class="popup-header">
+                    <span class="popup-title">${node.name}</span>
+                    <span class="badge ${getBadgeClass(node.status)} status-badge">${node.status}</span>
+                </div>
+                <table class="telemetry-table">
+                    <tbody>${metricsRows}</tbody>
+                </table>
+                <div class="last-update node-timestamp">Updated: ${node.last_updated}</div>
+                </div>
+            `;
+        }
+
+        // 5. Update Marker Realtime tanpa merusak DOM / Map State
+        function renderNodes(nodes) {
+            document.getElementById('node-count').innerText = nodes.length;
+            const currentIds = new Set(nodes.map(n => n.id));
+
+            Object.keys(markerCache).forEach(id => {
+                if (!currentIds.has(id)) {
+                    map.removeLayer(markerCache[id]);
+                    delete markerCache[id];
+                }
+            });
+
+            nodes.forEach(node => {
+                if (markerCache[node.id]) {
+                    const marker = markerCache[node.id];
+                    marker.setLatLng([node.lat, node.lng]);
+                    marker.setIcon(createIcon(node.status));
+
+                    if (marker.isPopupOpen()) {
+                        // AMBIL CONTAINER POPUP YANG SEDANG DIBUKA DI LAYAR
+                        const popupEl = marker.getPopup().getElement();
+                        if (popupEl) {
+                            // 1. Update Status Badge
+                            const badgeEl = popupEl.querySelector('.status-badge');
+                            if (badgeEl) {
+                                badgeEl.className = `badge ${getBadgeClass(node.status)} status-badge`;
+                                badgeEl.innerText = node.status;
+                            }
+
+                            // 2. Update Nilai Tiap Metrik Tanpa Reset DOM
+                            if (node.json_data) {
+                                for (const [key, metric] of Object.entries(node.json_data)) {
+                                    const valEl = popupEl.querySelector(`[data-metric="${key}"]`);
+                                    if (valEl) {
+                                        let val = metric.value;
+                                        if (typeof val === 'number') {
+                                            val = Number.isInteger(val) ? val.toLocaleString('id-ID') : val.toFixed(3);
+                                        }
+                                        valEl.innerText = val;
+                                    }
+                                }
+                            }
+
+                            // 3. Update Timestamp
+                            const timeEl = popupEl.querySelector('.node-timestamp');
+                            if (timeEl) {
+                                timeEl.innerText = `Updated: ${node.last_updated}`;
+                            }
+                        }
+                    } else {
+                        // Jika popup sedang tertutup, update template HTML-nya
+                        marker.setPopupContent(buildPopupHTML(node));
+                    }
+                } else {
+                    const marker = L.marker([node.lat, node.lng], { icon: createIcon(node.status) }) //[cite: 1]
+                        .bindPopup(buildPopupHTML(node), { className: 'scada-popup' }) //[cite: 1]
+                        .addTo(map); //[cite: 1]
+                    markerCache[node.id] = marker; //[cite: 1]
+                }
+
+            });
+
+            if (!hasInitialFit && nodes.length > 0) {
+                fitMapToNodes(nodes);
+                hasInitialFit = true;
+            }
+        }
+
+        // 6. Fetch Loop ke Server Go / API Endpoint
+        const API_URL = '/api/nodes';
+
+        async function fetchTelemetry() {
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error('Network error');
+
+                const data = await response.json();
+                if (data.success && data.nodes) {
+                    renderNodes(data.nodes);
+                    document.getElementById('conn-dot').className = 'dot';
+                    document.getElementById('conn-status').innerText = 'Connected';
+                    document.getElementById('last-sync').innerText = new Date().toLocaleTimeString('id-ID');
+                }
+            } catch (err) {
+                document.getElementById('conn-dot').className = 'dot error';
+                document.getElementById('conn-status').innerText = 'Disconnected';
+            }
+        }
+
+        // ================= CONFIG EDITOR UI LOGIC =================
+        async function openConfigModal() {
+            try {
+                const res = await fetch('/api/config');
+                const data = await res.json();
+                if (data.success) {
+                    activeConfig = data.config;
+                    renderConfigEditor();
+                    document.getElementById('config-modal').style.display = 'flex';
+                }
+            } catch (err) {
+                showToast('Gagal memuat konfigurasi: ' + err.message, 'error');
+            }
+        }
+
+        function closeConfigModal() {
+            document.getElementById('config-modal').style.display = 'none';
+        }
+
+        function renderConfigEditor() {
+            const container = document.getElementById('modal-nodes-container');
+            container.innerHTML = '';
+
+            activeConfig.nodes.forEach((node, nodeIdx) => {
+                const nodeDiv = document.createElement('div');
+                nodeDiv.className = 'node-card';
+                nodeDiv.dataset.nodeIdx = nodeIdx;
+
+                let metricsHTML = '';
+                const metrics = node.metrics || {};
+                Object.entries(metrics).forEach(([mKey, mVal]) => {
+                    metricsHTML += `
+                        <div class="metric-row">
+                            <input class="form-control m-key" placeholder="Key ID" value="${mKey}">
+                            <input class="form-control m-label" placeholder="Label / Tag" value="${mVal.label || ''}">
+                            <input class="form-control m-table" placeholder="Table" value="${mVal.table || ''}">
+                            <input class="form-control m-col" placeholder="Column" value="${mVal.column || ''}">
+                            <input class="form-control m-unit" placeholder="Unit" value="${mVal.unit || ''}">
+                            <button class="btn-danger" onclick="this.parentElement.remove()">✕</button>
+                        </div>
+                    `;
+                });
+
+                nodeDiv.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; margin-bottom: 8px;">
+                        <strong style="color:#38bdf8;">Node: ${node.name || 'Baru'}</strong>
+                        <button class="btn-danger" style="font-size:11px;" onclick="this.closest('.node-card').remove()">Hapus Node</button>
+                    </div>
+                    <div class="node-grid">
+                        <div class="form-group"><label>Node ID</label><input class="form-control n-id" value="${node.id || ''}"></div>
+                        <div class="form-group"><label>Nama Lokasi</label><input class="form-control n-name" value="${node.name || ''}"></div>
+                        <div class="form-group"><label>Latitude</label><input type="number" step="any" class="form-control n-lat" value="${node.lat}"></div>
+                        <div class="form-group"><label>Longitude</label><input type="number" step="any" class="form-control n-lng" value="${node.lng}"></div>
+                        <div class="form-group"><label>Status</label><input class="form-control n-status" value="${node.status_source || 'ON'}"></div>
+                    </div>
+                    <div style="margin-top: 8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                            <label style="font-size:11px; color:#94a3b8;">Metrics / Telemetry Data:</label>
+                            <button class="btn-secondary" style="font-size:10px;" onclick="addMetricRow(this)">+ Tambah Metrik</button>
+                        </div>
+                        <div class="metrics-container">${metricsHTML}</div>
+                    </div>
+                `;
+                container.appendChild(nodeDiv);
+            });
+        }
+
+        function addNewNode() {
+            activeConfig.nodes.push({
+                id: 'node_' + Date.now(),
+                name: 'Node Baru',
+                lat: -7.0694,
+                lng: 107.7083,
+                status_source: 'ON',
+                metrics: {}
+            });
+            renderConfigEditor();
+        }
+
+        function addMetricRow(btn) {
+            const container = btn.closest('.node-card').querySelector('.metrics-container');
+            const row = document.createElement('div');
+            row.className = 'metric-row';
+            row.innerHTML = `
+                <input class="form-control m-key" placeholder="Key ID (e.g. ph)" value="metric_${Date.now().toString().slice(-4)}">
+                <input class="form-control m-label" placeholder="Label / Tag" value="">
+                <input class="form-control m-table" placeholder="Table" value="">
+                <input class="form-control m-col" placeholder="Column" value="">
+                <input class="form-control m-unit" placeholder="Unit" value="">
+                <button class="btn-danger" onclick="this.parentElement.remove()">✕</button>
+            `;
+            container.appendChild(row);
+        }
+
+        async function saveConfiguration() {
+            const nodeCards = document.querySelectorAll('.node-card');
+            const updatedNodes = [];
+
+            nodeCards.forEach(card => {
+                const id = card.querySelector('.n-id').value.trim();
+                const name = card.querySelector('.n-name').value.trim();
+                const lat = parseFloat(card.querySelector('.n-lat').value);
+                const lng = parseFloat(card.querySelector('.n-lng').value);
+                const status = card.querySelector('.n-status').value.trim();
+
+                const metrics = {};
+                card.querySelectorAll('.metric-row').forEach(row => {
+                    const key = row.querySelector('.m-key').value.trim();
+                    if (key) {
+                        metrics[key] = {
+                            label: row.querySelector('.m-label').value.trim(),
+                            table: row.querySelector('.m-table').value.trim(),
+                            column: row.querySelector('.m-col').value.trim(),
+                            unit: row.querySelector('.m-unit').value.trim()
+                        };
+                    }
+                });
+
+                updatedNodes.push({ id, name, lat, lng, status_source: status, metrics });
+            });
+
+            activeConfig.nodes = updatedNodes;
+
+            try {
+                const res = await fetch('/api/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(activeConfig)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    showToast('Konfigurasi berhasil disimpan!', 'success');
+                    closeConfigModal();
+                    fetchTelemetry();
+                } else {
+                    showToast(result.message || 'Gagal menyimpan', 'error');
+                }
+            } catch (err) {
+                showToast('Gagal menghubungi server: ' + err.message, 'error');
+            }
+        }
+
+        function showToast(message, type = 'info', duration = 3500) {
+            const container = document.getElementById('toast-container');
+
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+
+            const icons = {
+                success: '✓',
+                error: '✕',
+                warning: '⚠',
+                info: 'ℹ'
+            };
+
+            toast.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-weight: bold;">${icons[type] || 'ℹ'}</span>
+            <span>${message}</span>
+        </div>
+        <button class="toast-close" onclick="dismissToast(this.parentElement)">✕</button>
+    `;
+
+            container.appendChild(toast);
+
+            // Trigger animasi slide in
+            requestAnimationFrame(() => {
+                toast.classList.add('show');
+            });
+
+            // Timer slide out
+            const hideTimeout = setTimeout(() => {
+                dismissToast(toast);
+            }, duration);
+
+            toast.dataset.timeoutId = hideTimeout;
+        }
+
+        function dismissToast(toast) {
+            if (!toast || toast.classList.contains('hide')) return;
+            clearTimeout(toast.dataset.timeoutId);
+            toast.classList.remove('show');
+            toast.classList.add('hide');
+            toast.addEventListener('transitionend', () => {
+                toast.remove();
+            }, { once: true });
+        }
+
+        fetchTelemetry();
+        setInterval(fetchTelemetry, 5000);
+    </script>
+</body>
+
+</html>

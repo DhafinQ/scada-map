@@ -1,0 +1,33 @@
+{
+  "port": 8080,
+  "db": {
+    "host": "127.0.0.1",
+    "port": 3306,
+    "user": "root",
+    "password": "",
+    "database": ""
+  },
+  "nodes": [
+    {
+      "id": "ascon",
+      "name": "Ascon Multi Pratama",
+      "lat": -6.9625,
+      "lng": 107.6244,
+      "status_source": "ON",
+      "metrics": {
+        "flow_rate": {
+          "label": "Flow Rate",
+          "unit": "L/s",
+          "table": "Flow",
+          "column": "BWRT"
+        },
+        "totalizer": {
+          "label": "Totalizer",
+          "unit": "Liter",
+          "table": "Flow",
+          "column": "Tot_BWRT"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+# Compiled Binaries & Executables (Go)
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/
+dist/
+main
+
+# Sensitive Configurations & Database Credentials
+config.json
+*.env
+.env.*
+
+# OS Generated Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE & Code Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+# Logs & Temporary Files
+*.log
+tmp/
+temp/
