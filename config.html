@@ -696,6 +696,11 @@
 
         </div>
 
+        <!-- Config -->
+        <button class="btn-config" onclick="openConfigModal()">
+            ⚙ Kelola Node & DB
+        </button>
+
     </aside>
 
     <!-- Toggle Button -->
@@ -707,6 +712,20 @@
     </button>
 
     <div id="map"></div>
+
+    <div id="config-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Konfigurasi Node & Mapping Database</h3>
+                <button onclick="closeConfigModal()" class="btn-danger" style="padding: 2px 8px;">✕</button>
+            </div>
+            <div class="modal-body" id="modal-nodes-container"></div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="addNewNode()">+ Tambah Lokasi Node</button>
+                <button class="btn-success" onclick="saveConfiguration()">Simpan & Terapkan</button>
+            </div>
+        </div>
+    </div>
 
     <div id="toast-container"></div>
 
@@ -936,6 +955,147 @@
         }
 
         // ================= CONFIG EDITOR UI LOGIC =================
+        async function openConfigModal() {
+            try {
+                const res = await fetch('/api/config');
+                const data = await res.json();
+                if (data.success) {
+                    activeConfig = data.config;
+                    renderConfigEditor();
+                    document.getElementById('config-modal').style.display = 'flex';
+                }
+            } catch (err) {
+                showToast('Gagal memuat konfigurasi: ' + err.message, 'error');
+            }
+        }
+
+        function closeConfigModal() {
+            document.getElementById('config-modal').style.display = 'none';
+        }
+
+        function renderConfigEditor() {
+            const container = document.getElementById('modal-nodes-container');
+            container.innerHTML = '';
+
+            activeConfig.nodes.forEach((node, nodeIdx) => {
+                const nodeDiv = document.createElement('div');
+                nodeDiv.className = 'node-card';
+                nodeDiv.dataset.nodeIdx = nodeIdx;
+
+                let metricsHTML = '';
+                const metrics = node.metrics || {};
+                Object.entries(metrics).forEach(([mKey, mVal]) => {
+                    metricsHTML += `
+                        <div class="metric-row">
+                            <input class="form-control m-key" placeholder="Key ID" value="${mKey}">
+                            <input class="form-control m-label" placeholder="Label / Tag" value="${mVal.label || ''}">
+                            <input class="form-control m-table" placeholder="Table" value="${mVal.table || ''}">
+                            <input class="form-control m-col" placeholder="Column" value="${mVal.column || ''}">
+                            <input class="form-control m-unit" placeholder="Unit" value="${mVal.unit || ''}">
+                            <button class="btn-danger" onclick="this.parentElement.remove()">✕</button>
+                        </div>
+                    `;
+                });
+
+                nodeDiv.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; margin-bottom: 8px;">
+                        <strong style="color:#38bdf8;">Node: ${node.name || 'Baru'}</strong>
+                        <button class="btn-danger" style="font-size:11px;" onclick="this.closest('.node-card').remove()">Hapus Node</button>
+                    </div>
+                    <div class="node-grid">
+                        <div class="form-group"><label>Node ID</label><input class="form-control n-id" value="${node.id || ''}"></div>
+                        <div class="form-group"><label>Nama Lokasi</label><input class="form-control n-name" value="${node.name || ''}"></div>
+                        <div class="form-group"><label>Latitude</label><input type="number" step="any" class="form-control n-lat" value="${node.lat}"></div>
+                        <div class="form-group"><label>Longitude</label><input type="number" step="any" class="form-control n-lng" value="${node.lng}"></div>
+                        <div class="form-group"><label>Status</label><input class="form-control n-status" value="${node.status_source || 'ON'}"></div>
+                    </div>
+                    <div style="margin-top: 8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                            <label style="font-size:11px; color:#94a3b8;">Metrics / Telemetry Data:</label>
+                            <button class="btn-secondary" style="font-size:10px;" onclick="addMetricRow(this)">+ Tambah Metrik</button>
+                        </div>
+                        <div class="metrics-container">${metricsHTML}</div>
+                    </div>
+                `;
+                container.appendChild(nodeDiv);
+            });
+        }
+
+        function addNewNode() {
+            activeConfig.nodes.push({
+                id: 'node_' + Date.now(),
+                name: 'Node Baru',
+                lat: -7.0694,
+                lng: 107.7083,
+                status_source: 'ON',
+                metrics: {}
+            });
+            renderConfigEditor();
+        }
+
+        function addMetricRow(btn) {
+            const container = btn.closest('.node-card').querySelector('.metrics-container');
+            const row = document.createElement('div');
+            row.className = 'metric-row';
+            row.innerHTML = `
+                <input class="form-control m-key" placeholder="Key ID (e.g. ph)" value="metric_${Date.now().toString().slice(-4)}">
+                <input class="form-control m-label" placeholder="Label / Tag" value="">
+                <input class="form-control m-table" placeholder="Table" value="">
+                <input class="form-control m-col" placeholder="Column" value="">
+                <input class="form-control m-unit" placeholder="Unit" value="">
+                <button class="btn-danger" onclick="this.parentElement.remove()">✕</button>
+            `;
+            container.appendChild(row);
+        }
+
+        async function saveConfiguration() {
+            const nodeCards = document.querySelectorAll('.node-card');
+            const updatedNodes = [];
+
+            nodeCards.forEach(card => {
+                const id = card.querySelector('.n-id').value.trim();
+                const name = card.querySelector('.n-name').value.trim();
+                const lat = parseFloat(card.querySelector('.n-lat').value);
+                const lng = parseFloat(card.querySelector('.n-lng').value);
+                const status = card.querySelector('.n-status').value.trim();
+
+                const metrics = {};
+                card.querySelectorAll('.metric-row').forEach(row => {
+                    const key = row.querySelector('.m-key').value.trim();
+                    if (key) {
+                        metrics[key] = {
+                            label: row.querySelector('.m-label').value.trim(),
+                            table: row.querySelector('.m-table').value.trim(),
+                            column: row.querySelector('.m-col').value.trim(),
+                            unit: row.querySelector('.m-unit').value.trim()
+                        };
+                    }
+                });
+
+                updatedNodes.push({ id, name, lat, lng, status_source: status, metrics });
+            });
+
+            activeConfig.nodes = updatedNodes;
+
+            try {
+                const res = await fetch('/api/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(activeConfig)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    showToast('Konfigurasi berhasil disimpan!', 'success');
+                    closeConfigModal();
+                    fetchTelemetry();
+                } else {
+                    showToast(result.message || 'Gagal menyimpan', 'error');
+                }
+            } catch (err) {
+                showToast('Gagal menghubungi server: ' + err.message, 'error');
+            }
+        }
+
         function showToast(message, type = 'info', duration = 3500) {
             const container = document.getElementById('toast-container');
 
