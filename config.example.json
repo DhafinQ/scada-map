@@ -1,11 +1,20 @@
 {
   "port": 8080,
   "db": {
-    "host": "127.0.0.1",
+    "host": "host.docker.internal",
     "port": 3306,
     "user": "root",
     "password": "",
     "database": ""
+  },
+  "mqtt": {
+    "enabled": true,
+    "broker": "tcp://host.docker.internal",
+    "port": 1883,
+    "client_id": "scada_map_backend",
+    "user": "",
+    "password": "",
+    "topic": "wtp/telemetry/data"
   },
   "nodes": [
     {
@@ -14,6 +23,31 @@
       "lat": -6.9625,
       "lng": 107.6244,
       "status_source": "ON",
+      "data_source": "mqtt",
+      "mqtt_topic": "scada/plant/telemetry",
+      "metrics": {
+        "flow_rate": {
+          "label": "Flow Rate",
+          "unit": "L/s",
+          "table": "",
+          "column": "BWRT"
+        },
+        "totalizer": {
+          "label": "Totalizer",
+          "unit": "Liter",
+          "table": "",
+          "column": "Tot_BWRT"
+        }
+      }
+    },
+    {
+      "id": "ascon2",
+      "name": "Ascon Multi Pratama 2",
+      "lat": -6.9825,
+      "lng": 107.3244,
+      "status_source": "ON",
+      "data_source": "db",
+      "mqtt_topic": "",
       "metrics": {
         "flow_rate": {
           "label": "Flow Rate",

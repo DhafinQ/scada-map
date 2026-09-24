@@ -1,7 +1,7 @@
 
 # SCADA Map Monitoring System
 
-Aplikasi pemantauan visual berbasis web interaktif untuk memetakan titik distribusi dan telemetri fasilitas (seperti WTP dan Reservoir) secara langsung dari database MySQL lokal. Dibangun menggunakan Go untuk sisi backend dan Leaflet.js pada antarmuka web.
+Aplikasi pemantauan visual berbasis web interaktif untuk memetakan titik distribusi dan telemetri fasilitas (seperti WTP dan Reservoir) secara langsung dari database MySQL. Dibangun menggunakan Go untuk sisi backend dan Leaflet.js pada antarmuka web.
 
 ---
 
@@ -18,34 +18,45 @@ Aplikasi pemantauan visual berbasis web interaktif untuk memetakan titik distrib
 
 ## Prasyarat Sistem
 
-- **Go**: Versi 1.18 atau lebih baru
-- **MySQL Database**: Server database lokal aktif
-- Browser modern (Chrome, Edge, Firefox, Safari)
+Pilih salah satu metode yang ingin digunakan:
+
+- **Metode Docker (Direkomendasikan)**:
+  - Docker Engine & Docker Compose
+  - Akses ke MySQL Database (lokal di host atau remote)
+- **Metode Standalone (Tanpa Docker)**:
+  - Go (versi 1.20 atau lebih baru)
+  - MySQL Database aktif
 
 ---
 
 ## Struktur Proyek
 
 ```text
-├── index.html     # Tampilan peta SCADA, styling CSS, dan client fetch script
-├── main.go        # Server HTTP Go, handler API, dan query builder MySQL
-├── config.json    # Konfigurasi database MySQL, port, dan daftar node telemetri
-└── go.mod         # Berkas dependensi Go modul
+scada-map-wika
+├── docker-compose.yml   # Konfigurasi orkestrasi container Docker
+├── Dockerfile           # Multi-stage container build Go & Alpine
+├── config.example.json  # Template awal konfigurasi
+├── config.json          # Konfigurasi aktif (database, node, metrik)
+├── config.html          # Panel antarmuka manajemen konfigurasi
+├── index.html           # Tampilan visual peta SCADA Leaflet
+├── main.go              # Backend HTTP server dan MySQL query handler
+├── go.mod               # Manajemen modul Go
+└── README.md            # Dokumentasi proyek
 
 ```
 
 ---
 
-## Persiapan Database
+## Persiapan Konfigurasi Database
 
-Aplikasi mengambil data telemetri terakhir (`ORDER BY id DESC LIMIT 1`) berdasarkan konfigurasi mapping tabel dan kolom di `config.json`. Pastikan tabel terkait memiliki kolom auto-increment `id` dan kolom-kolom yang didefinisikan (contoh: tabel `Flow`, `Level`, `Analyzer`, `250_FTHrs`, `300_FTHrs`).
+1. Salin template konfigurasi jika belum memiliki `config.json`:
+```bash
+cp config.example.json config.json
 
----
+```
 
-## Konfigurasi
 
-Sesuaikan koneksi database MySQL pada berkas `config.json`:
-
+2. Buka `config.json` dan sesuaikan koneksi database MySQL:
 ```json
 {
   "port": 8080,
@@ -61,39 +72,67 @@ Sesuaikan koneksi database MySQL pada berkas `config.json`:
 
 ```
 
+
+
+> **Catatan Docker:** Jika server MySQL berjalan langsung di mesin host (bukan di dalam jaringan Docker), ubah `"host"` menjadi `"host.docker.internal"`.
+
 ---
 
-## Instalasi dan Menjalankan Proyek
+## Menjalankan Proyek
 
-1. **Inisialisasi Proyek (Github Clone)**:
+### Cara 1: Menggunakan Docker Compose (Direkomendasikan)
+
+1. **Jalankan container**:
 ```bash
-git clone https://github.com/DhafinQ/scada-map.git
-cd scada-map
-```
-
-
-2. **Unduh Driver MySQL**:
-```bash
-go get [github.com/go-sql-driver/mysql](https://github.com/go-sql-driver/mysql)
+docker compose up -d --build
 
 ```
 
 
-3. **Jalankan Aplikasi**:
+2. **Periksa log aplikasi**:
+```bash
+docker compose logs -f
+
+```
+
+
+3. **Menghentikan container**:
+```bash
+docker compose down
+
+```
+
+
+
+Perubahan konfigurasi melalui web UI akan otomatis tersimpan di host karena berkas `config.json` di-mount menggunakan volume binding.
+
+---
+
+### Cara 2: Menjalankan Langsung (Go Local)
+
+1. **Unduh dependensi**:
+```bash
+go mod download
+
+```
+
+
+2. **Jalankan server**:
 ```bash
 go run main.go
 
 ```
 
 
-4. **Akses Antarmuka**:
-Buka peramban dan kunjungi:
-```text
-http://localhost:8080
 
-```
+---
 
+## Akses Antarmuka
 
+Buka peramban web dan kunjungi:
+
+* **Peta SCADA**: `http://localhost:8080`
+* **Editor Konfigurasi**: `http://localhost:8080/config.html`
 
 ---
 
@@ -101,10 +140,11 @@ http://localhost:8080
 
 | Endpoint | Method | Deskripsi |
 | --- | --- | --- |
-| `/` | `GET` | Menyajikan berkas antarmuka statis (`index.html`) |
-| `/api/nodes` | `GET` | Mengambil data koordinat serta telemetri terbaru dari MySQL |
-| `/api/config` | `GET` | Mengambil seluruh skema konfigurasi dari `config.json` |
-| `/api/config` | `POST` | Memperbarui berkas `config.json` berdasarkan input modal editor |
+| `/` | `GET` | Menyajikan antarmuka visual peta (`index.html`) |
+| `/config.html` | `GET` | Menyajikan panel editor pengaturan |
+| `/api/nodes` | `GET` | Mengambil data node beserta telemetri terbaru dari database |
+| `/api/config` | `GET` | Mengambil seluruh konfigurasi aktif dari `config.json` |
+| `/api/config` | `POST` | Menyimpan perubahan konfigurasi ke `config.json` |
 
 ```
 
