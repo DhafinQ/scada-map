@@ -10,16 +10,30 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"mime"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	_ "github.com/go-sql-driver/mysql"
 )
 
 type Config struct {
-	Port  int        `json:"port"`
-	DB    DBConfig   `json:"db"`
-	MQTT  MQTTConfig `json:"mqtt"`
-	Nodes []NodeItem `json:"nodes"`
+	Port            int                   `json:"port"`
+	DB              DBConfig              `json:"db"`
+	MQTTConnections map[string]MQTTConfig `json:"mqtt_connections"` // Ubah ini
+	Nodes           []NodeItem            `json:"nodes"`
+}
+
+type NodeItem struct {
+	ID             string                    `json:"id"`
+	Name           string                    `json:"name"`
+	Lat            float64                   `json:"lat"`
+	Lng            float64                   `json:"lng"`
+	StatusSource   interface{}               `json:"status_source"`
+	StatusTimeout  int                       `json:"status_timeout"`
+	DataSource     string                    `json:"data_source"`
+	MQTTConnection string                    `json:"mqtt_connection"` // ID broker di config
+	MQTTTopic      string                    `json:"mqtt_topic"`
+	Metrics        map[string]MetricProperty `json:"metrics"`
 }
 
 type DBConfig struct {
@@ -40,17 +54,6 @@ type MQTTConfig struct {
 	Topic    string `json:"topic"`    // e.g. "scada/nodes/#" atau topic agregat
 }
 
-type NodeItem struct {
-	ID           string                    `json:"id"`
-	Name         string                    `json:"name"`
-	Lat          float64                   `json:"lat"`
-	Lng          float64                   `json:"lng"`
-	StatusSource interface{}               `json:"status_source"`
-	DataSource   string                    `json:"data_source"` // "db" atau "mqtt"
-	MQTTTopic    string                    `json:"mqtt_topic"`  // Topic spesifik jika pakai MQTT
-	Metrics      map[string]MetricProperty `json:"metrics"`
-}
-
 type MetricProperty struct {
 	Label  string `json:"label"`
 	Unit   string `json:"unit"`
@@ -62,11 +65,13 @@ var (
 	appConfig   Config
 	configMutex sync.RWMutex
 	dbPool      *sql.DB
-	mqttClient  mqtt.Client
 
-	// Cache thread-safe untuk menampung telemetri terakhir dari MQTT
-	// Key: Node ID atau Topic -> Value: Map key-value telemetri
+	// Simpan multi-client
+	mqttClients = make(map[string]mqtt.Client)
+
+	// Cache key sekarang gabungan dari: ConnectionID|Topic
 	mqttDataStore = make(map[string]map[string]interface{})
+	mqttTimestampStore = make(map[string]time.Time)
 	mqttMutex     sync.RWMutex
 )
 
@@ -81,6 +86,10 @@ type MQTTRecord struct {
 }
 
 func main() {
+	mime.AddExtensionType(".css", "text/css; charset=utf-8")
+    mime.AddExtensionType(".js", "text/javascript; charset=utf-8")
+    mime.AddExtensionType(".png", "image/png")
+    mime.AddExtensionType(".jpg", "image/jpeg")
 	// 1. Baca konfigurasi
 	if err := loadConfig(); err != nil {
 		log.Fatalf("[ERROR] Gagal membaca config.json: %v", err)
@@ -90,14 +99,29 @@ func main() {
 	initDB()
 
 	// 3. Inisialisasi MQTT Client (jika diaktifkan)
-	if appConfig.MQTT.Enabled {
+	if len(appConfig.MQTTConnections) > 0 {
 		initMQTT()
 	}
 
 	// 4. Routing
 	http.HandleFunc("/api/nodes", handleNodesAPI)
 	http.HandleFunc("/api/config", handleConfigAPI)
-	http.Handle("/", http.FileServer(http.Dir(".")))
+
+	// Routing untuk Static Files (CSS, JS, Images, Tiles)
+	fs := http.FileServer(http.Dir("./static"))
+	http.Handle("/static/", http.StripPrefix("/static/", fs))
+
+	// Routing untuk Halaman HTML
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
+		http.ServeFile(w, r, "index.html")
+	})
+	http.HandleFunc("/config", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "config.html")
+	})
 
 	port := 8080
 	if appConfig.Port != 0 {
@@ -144,58 +168,77 @@ func initDB() {
 }
 
 func initMQTT() {
-	brokerURI := fmt.Sprintf("%s:%d", appConfig.MQTT.Broker, appConfig.MQTT.Port)
-	opts := mqtt.NewClientOptions().AddBroker(brokerURI)
-	clientID := appConfig.MQTT.ClientID
-	if clientID == "" {
-		clientID = fmt.Sprintf("scada-map-%d", time.Now().Unix())
-	}
-	opts.SetClientID(clientID)
-	if appConfig.MQTT.User != "" {
-		opts.SetUsername(appConfig.MQTT.User)
-		opts.SetPassword(appConfig.MQTT.Password)
-	}
-	opts.SetAutoReconnect(true)
-	opts.SetKeepAlive(60 * time.Second)
-
-	// Callback penanganan pesan masuk
-	opts.SetDefaultPublishHandler(func(client mqtt.Client, msg mqtt.Message) {
-	var raw MQTTRawPayload
-	if err := json.Unmarshal(msg.Payload(), &raw); err != nil {
-		log.Printf("[MQTT] Gagal parse payload dari topic %s: %v", msg.Topic(), err)
-		return
-	}
-
-	// Flattening records: TagName -> Value
-	flatData := make(map[string]interface{})
-	for _, rec := range raw.Records {
-		flatData[rec.TagName] = rec.Value
-	}
-
-	mqttMutex.Lock()
-	// Simpan ke memory berdasarkan nama topic
-	mqttDataStore[msg.Topic()] = flatData
-	mqttMutex.Unlock()
-})
-
-	opts.OnConnect = func(c mqtt.Client) {
-		fmt.Printf("✅ BERHASIL TERHUBUNG ke MQTT Broker: %s\n", brokerURI)
-		// Subscribe ke topic yang ditentukan di config
-		topic := appConfig.MQTT.Topic
-		if topic == "" {
-			topic = "scada/nodes/#"
+	for connID, cfg := range appConfig.MQTTConnections {
+		if !cfg.Enabled {
+			continue
 		}
-		c.Subscribe(topic, 1, nil)
-		fmt.Printf("[MQTT] Subscribed to topic: %s\n\n", topic)
-	}
 
-	opts.OnConnectionLost = func(c mqtt.Client, err error) {
-		log.Printf("⚠️ KONEKSI MQTT TERPUTUS: %v. Mencoba rekoneksi...", err)
-	}
+		brokerURI := fmt.Sprintf("%s:%d", cfg.Broker, cfg.Port)
+		opts := mqtt.NewClientOptions().AddBroker(brokerURI)
+		
+		clientID := cfg.ClientID
+		if clientID == "" {
+			clientID = fmt.Sprintf("scada-map-%s-%d", connID, time.Now().Unix())
+		}
+		opts.SetClientID(clientID)
+		
+		if cfg.User != "" {
+			opts.SetUsername(cfg.User)
+			opts.SetPassword(cfg.Password)
+		}
+		opts.SetAutoReconnect(true)
+		opts.SetKeepAlive(60 * time.Second)
 
-	mqttClient = mqtt.NewClient(opts)
-	if token := mqttClient.Connect(); token.Wait() && token.Error() != nil {
-		log.Printf("❌ GAGAL TERHUBUNG KE MQTT BROKER: %v", token.Error())
+		// Capture variabel loop untuk closure
+		currentConnID := connID
+		currentCfg := cfg
+
+		// Callback penanganan pesan masuk
+		opts.SetDefaultPublishHandler(func(client mqtt.Client, msg mqtt.Message) {
+			var raw MQTTRawPayload
+			if err := json.Unmarshal(msg.Payload(), &raw); err != nil {
+				log.Printf("[MQTT-%s] Gagal parse payload dari topic %s: %v", currentConnID, msg.Topic(), err)
+				return
+			}
+
+			flatData := make(map[string]interface{})
+			for _, rec := range raw.Records {
+				flatData[rec.TagName] = rec.Value
+			}
+
+			// Parse waktu dari payload (fallback ke time.Now jika gagal)
+			t, err := time.Parse(time.RFC3339Nano, raw.Timestamp)
+			if err != nil {
+				t = time.Now()
+			}
+
+			cacheKey := fmt.Sprintf("%s|%s", currentConnID, msg.Topic())
+			
+			mqttMutex.Lock()
+			mqttDataStore[cacheKey] = flatData
+			mqttTimestampStore[cacheKey] = t // Simpan waktu update
+			mqttMutex.Unlock()
+		})
+
+		opts.OnConnect = func(c mqtt.Client) {
+			fmt.Printf("✅ BERHASIL TERHUBUNG ke MQTT [%s]: %s\n", currentConnID, brokerURI)
+			topic := currentCfg.Topic
+			if topic == "" {
+				topic = "#"
+			}
+			c.Subscribe(topic, 1, nil)
+		}
+
+		opts.OnConnectionLost = func(c mqtt.Client, err error) {
+			log.Printf("⚠️ KONEKSI MQTT [%s] TERPUTUS: %v. Mencoba rekoneksi...", currentConnID, err)
+		}
+
+		client := mqtt.NewClient(opts)
+		if token := client.Connect(); token.Wait() && token.Error() != nil {
+			log.Printf("❌ GAGAL TERHUBUNG KE MQTT [%s]: %v", currentConnID, token.Error())
+		} else {
+			mqttClients[currentConnID] = client
+		}
 	}
 }
 
@@ -300,8 +343,9 @@ func handleNodesAPI(w http.ResponseWriter, r *http.Request) {
 			var val interface{}
 
 			if sourceMode == "mqtt" {
-				// Ambil langsung via TagName yang didefinisikan pada m.Column
-				if payload, found := mqttDataStore[node.MQTTTopic]; found {
+				// Cari data menggunakan gabungan ID Koneksi dan Topic
+				cacheKey := fmt.Sprintf("%s|%s", node.MQTTConnection, node.MQTTTopic)
+				if payload, found := mqttDataStore[cacheKey]; found {
 					val = payload[m.Column]
 				}
 			} else {
@@ -328,9 +372,58 @@ func handleNodesAPI(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+		// TENTUKAN WAKTU UPDATE & LOGIKA STATUS ON/OFF
+		nodeTime := currentTime
 		status := "ON"
-		if strStatus, ok := node.StatusSource.(string); ok {
-			status = strStatus
+
+		var dynVal interface{}
+		cacheKey := fmt.Sprintf("%s|%s", node.MQTTConnection, node.MQTTTopic)
+
+		if sourceMode == "mqtt" {
+			// Update label waktu di popup dengan waktu dari sensor
+			if ts, ok := mqttTimestampStore[cacheKey]; ok {
+				nodeTime = ts.In(time.Local).Format("02 Jan 2006 - 15:04:05 WIB")
+			} else {
+				nodeTime = "Belum ada data"
+			}
+		}
+
+		// 1. Evaluasi dari Status Source (Tag Name atau Static text)
+		if strStatus, ok := node.StatusSource.(string); ok && strStatus != "" {
+			strUpper := strings.ToUpper(strStatus)
+			if strUpper == "ON" || strUpper == "OFF" {
+				status = strUpper
+			} else if sourceMode == "mqtt" {
+				if payload, found := mqttDataStore[cacheKey]; found {
+					dynVal = payload[strStatus]
+				}
+				if dynVal != nil {
+					switch v := dynVal.(type) {
+					case bool:
+						if v { status = "ON" } else { status = "OFF" }
+					case float64:
+						if v > 0 { status = "ON" } else { status = "OFF" }
+					case string:
+						valStr := strings.ToUpper(v)
+						if valStr == "TRUE" || valStr == "1" || valStr == "ON" { status = "ON" } else { status = "OFF" }
+					}
+				} else {
+					status = "OFF" // Jika tag tidak ditemukan di payload
+				}
+			}
+		}
+
+		// 2. TIMEOUT OVERRIDE (Mengubah jadi merah/OFF jika alat mati terlalu lama)
+		if sourceMode == "mqtt" && node.StatusTimeout > 0 {
+			if ts, ok := mqttTimestampStore[cacheKey]; ok {
+				// Cek selisih waktu sekarang dengan timestamp payload terakhir
+				if time.Since(ts).Seconds() > float64(node.StatusTimeout) {
+					status = "OFF"
+				}
+			} else {
+				// Jika tidak ada cache (broker tersambung tapi belum pernah ada data yang lewat)
+				status = "OFF" 
+			}
 		}
 
 		outputNodes = append(outputNodes, OutputNode{
@@ -340,7 +433,7 @@ func handleNodesAPI(w http.ResponseWriter, r *http.Request) {
 			Lng:         node.Lng,
 			Status:      status,
 			DataSource:  sourceMode,
-			LastUpdated: currentTime,
+			LastUpdated: nodeTime, // Terapkan waktu per-node
 			JsonData:    jsonData,
 		})
 	}

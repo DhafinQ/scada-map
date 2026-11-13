@@ -7,7 +7,7 @@
     <title>SCADA Map Monitoring System</title>
 
     <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="/static/css/leaflet.css" />
 
     <style>
         * {
@@ -32,53 +32,38 @@
         }
 
         /* =========================================
-   SIDEBAR SCADA
-   ========================================= */
+           SIDEBAR SCADA
+           ========================================= */
 
         .scada-sidebar {
             position: fixed;
             top: 50%;
             left: 12px;
             transform: translateY(-50%);
-
             width: 210px;
             z-index: 1500;
-
             background: rgba(15, 23, 42, 0.92);
             backdrop-filter: blur(10px);
-
             color: #f8fafc;
-
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px;
-
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
-
             padding: 14px;
-
             display: flex;
             flex-direction: column;
             gap: 12px;
-
-            transition:
-                transform 0.3s ease,
-                opacity 0.3s ease;
+            transition: transform 0.3s ease, opacity 0.3s ease;
         }
 
-        /* Saat sidebar disembunyikan */
         .scada-sidebar.hidden {
-            transform: translate(calc(-100% - 20px),
-                    -50%);
+            transform: translate(calc(-100% - 20px), -50%);
         }
 
-        /* Header/sidebar title */
         .sidebar-title {
             display: flex;
             align-items: center;
             justify-content: space-between;
-
             padding-bottom: 10px;
-
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
@@ -87,118 +72,11 @@
             color: #38bdf8;
         }
 
-        /* Status */
         .status-indicator {
             display: flex;
             align-items: center;
             gap: 8px;
-
             font-size: 12px;
-        }
-
-        /* Informasi */
-        .sidebar-info {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .sidebar-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-
-            font-size: 12px;
-            color: #cbd5e1;
-        }
-
-        .sidebar-value {
-            color: #38bdf8;
-            font-weight: 700;
-        }
-
-        /* Tombol config */
-        .btn-config {
-            width: 100%;
-
-            background: #2563eb;
-            color: #fff;
-
-            border: none;
-            padding: 8px 10px;
-
-            border-radius: 6px;
-
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 600;
-
-            transition: background 0.2s ease;
-        }
-
-        .btn-config:hover {
-            background: #1d4ed8;
-        }
-
-        /* Tombol toggle */
-        .sidebar-toggle {
-            position: fixed;
-
-            left: 12px;
-            top: 50%;
-
-            transform: translateY(-50%);
-
-            width: 34px;
-            height: 60px;
-
-            z-index: 1600;
-
-            border: 1px solid rgba(255, 255, 255, 0.1);
-
-            border-radius: 0 8px 8px 0;
-
-            background: rgba(15, 23, 42, 0.92);
-            backdrop-filter: blur(8px);
-
-            color: #fff;
-
-            cursor: pointer;
-
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-
-            transition:
-                left 0.3s ease,
-                background 0.2s ease;
-        }
-
-        .sidebar-toggle:hover {
-            background: rgba(30, 41, 59, 0.98);
-        }
-
-        /* Ketika sidebar terbuka,
-   tombol berada di sisi kanan sidebar */
-        .sidebar-toggle.open {
-            left: 222px;
-        }
-
-        /* Responsive */
-        @media (max-width: 600px) {
-
-            .scada-sidebar {
-                width: 180px;
-                left: 8px;
-            }
-
-            .sidebar-toggle.open {
-                left: 190px;
-            }
-        }
-
-        .status-indicator {
-            display: flex;
-            align-items: center;
-            gap: 6px;
         }
 
         .dot {
@@ -214,19 +92,66 @@
             box-shadow: 0 0 8px #ef4444;
         }
 
+        .sidebar-info {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .sidebar-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #cbd5e1;
+        }
+
+        .sidebar-value {
+            color: #38bdf8;
+            font-weight: 700;
+        }
+
         .btn-config {
+            width: 100%;
             background: #2563eb;
             color: #fff;
             border: none;
-            padding: 5px 12px;
+            padding: 8px 10px;
             border-radius: 6px;
             cursor: pointer;
             font-size: 12px;
             font-weight: 600;
+            transition: background 0.2s ease;
         }
 
         .btn-config:hover {
             background: #1d4ed8;
+        }
+
+        .sidebar-toggle {
+            position: fixed;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 34px;
+            height: 60px;
+            z-index: 1600;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0 8px 8px 0;
+            background: rgba(15, 23, 42, 0.92);
+            backdrop-filter: blur(8px);
+            color: #fff;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            transition: left 0.3s ease, background 0.2s ease;
+        }
+
+        .sidebar-toggle:hover {
+            background: rgba(30, 41, 59, 0.98);
+        }
+
+        .sidebar-toggle.open {
+            left: 222px;
         }
 
         /* Modal Styles */
@@ -261,9 +186,32 @@
             align-items: center;
         }
 
+        .modal-tabs {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-tabs button {
+            background: #334155;
+            color: #94a3b8;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .modal-tabs button.active {
+            background: #2563eb;
+            color: #fff;
+        }
+
         .modal-body {
             padding: 16px;
             overflow-y: auto;
+            flex: 1;
             display: flex;
             flex-direction: column;
             gap: 16px;
@@ -273,22 +221,23 @@
             padding: 12px 16px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
-            justify-content: flex-end;
-            gap: 10px;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .node-card {
+        .node-card, .mqtt-card {
             background: #0f172a;
             border: 1px solid #334155;
             border-radius: 8px;
             padding: 14px;
         }
 
-        .node-grid {
+        .node-grid, .mqtt-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
             gap: 8px;
             margin-bottom: 12px;
+            align-items: end;
         }
 
         .form-group label {
@@ -316,412 +265,87 @@
             align-items: center;
         }
 
-        .btn-danger {
-            background: #ef4444;
-            color: #fff;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
+        .btn-danger { background: #ef4444; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
+        .btn-secondary { background: #475569; color: #fff; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+        .btn-success { background: #10b981; color: #fff; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-weight: 600; }
 
-        .btn-secondary {
-            background: #475569;
-            color: #fff;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
+        /* Marker Badge & Popup SCADA */
+        .scada-node-wrapper { position: relative; pointer-events: none; }
+        .marker-pin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #ffffff; box-shadow: 0 0 8px rgba(0,0,0,0.8); position: absolute; top: 0; left: 0; pointer-events: auto; cursor: pointer; transform: translate(-50%, -50%); z-index: 2; }
+        .pin-on { background: #10b981; } .pin-off { background: #ef4444; } .pin-filled { background: #3b82f6; }
+        .pin-on::after { content: ""; position: absolute; inset: -4px; border-radius: 50%; border: 2px solid #10b981; animation: pulse 1.8s infinite ease-out; }
+        @keyframes pulse { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(2.4); opacity: 0; } }
 
-        .btn-success {
-            background: #10b981;
-            color: #fff;
-            border: none;
-            padding: 6px 14px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 600;
-        }
+        .leader-line { position: absolute; top: 0; left: 0; width: 45px; height: 2px; background: rgba(255, 255, 255, 0.7); transform-origin: left center; z-index: 1; }
+        .node-label-card { position: absolute; left: 45px; top: 0; transform: translateY(-50%); background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 6px; padding: 4px 10px; display: flex; align-items: center; gap: 8px; white-space: nowrap; color: #f8fafc; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4); pointer-events: auto; cursor: pointer; user-select: none; transition: transform 0.2s ease, background 0.2s ease; }
+        .node-label-card:hover { background: rgba(30, 41, 59, 0.9); border-color: #38bdf8; transform: translateY(-50%) scale(1.04); }
+        .card-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .card-title { font-size: 11px; font-weight: 600; letter-spacing: 0.3px; }
 
-        /* Marker Badge & Styles */
-        .custom-node-icon {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+        /* Popup */
+        .scada-popup .leaflet-popup-content-wrapper { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(6px); color: #f8fafc; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; padding: 4px; }
+        .scada-popup .leaflet-popup-tip { background: rgba(15, 23, 42, 0.95); }
+        .popup-box { width: 270px; max-height: 380px; overflow-y: auto; padding: 4px 6px; }
+        .popup-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 6px; margin-bottom: 8px; }
+        .popup-title { font-size: 14px; font-weight: 700; color: #f8fafc; }
+        .badge { padding: 2px 7px; font-size: 10px; font-weight: 800; border-radius: 4px; text-transform: uppercase; }
+        .badge-on { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; }
+        .badge-off { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
+        .telemetry-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .telemetry-table tr { border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .telemetry-table td { padding: 4px 2px; }
+        .metric-label { color: #94a3b8; }
+        .metric-value { text-align: right; font-weight: 600; color: #38bdf8; font-family: monospace; font-size: 12px; }
+        .metric-unit { color: #64748b; font-size: 10px; margin-left: 2px; }
+        .last-update { margin-top: 8px; font-size: 10px; color: #64748b; text-align: right; }
 
-        .marker-pin {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            border: 2px solid #ffffff;
-            box-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
-            position: relative;
-        }
-
-        .pin-on {
-            background: #10b981;
-        }
-
-        .pin-off {
-            background: #ef4444;
-        }
-
-        .pin-filled {
-            background: #3b82f6;
-        }
-
-        .pin-on::after {
-            content: "";
-            position: absolute;
-            inset: -4px;
-            border-radius: 50%;
-            border: 2px solid #10b981;
-            animation: pulse 1.8s infinite ease-out;
-        }
-
-        @keyframes pulse {
-            0% {
-                transform: scale(0.8);
-                opacity: 1;
-            }
-
-            100% {
-                transform: scale(2.4);
-                opacity: 0;
-            }
-        }
-
-        /* Custom Popup SCADA */
-        .scada-popup .leaflet-popup-content-wrapper {
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(6px);
-            color: #f8fafc;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 8px;
-            padding: 4px;
-        }
-
-        .scada-popup .leaflet-popup-tip {
-            background: rgba(15, 23, 42, 0.95);
-        }
-
-        .popup-box {
-            width: 270px;
-            max-height: 380px;
-            overflow-y: auto;
-            padding: 4px 6px;
-        }
-
-        .popup-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding-bottom: 6px;
-            margin-bottom: 8px;
-        }
-
-        .popup-title {
-            font-size: 14px;
-            font-weight: 700;
-            color: #f8fafc;
-        }
-
-        .badge {
-            padding: 2px 7px;
-            font-size: 10px;
-            font-weight: 800;
-            border-radius: 4px;
-            text-transform: uppercase;
-        }
-
-        .badge-on {
-            background: rgba(16, 185, 129, 0.2);
-            color: #34d399;
-            border: 1px solid #10b981;
-        }
-
-        .badge-off {
-            background: rgba(239, 68, 68, 0.2);
-            color: #f87171;
-            border: 1px solid #ef4444;
-        }
-
-        .badge-filled {
-            background: rgba(59, 130, 246, 0.2);
-            color: #60a5fa;
-            border: 1px solid #3b82f6;
-        }
-
-        .telemetry-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 11px;
-        }
-
-        .telemetry-table tr {
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .telemetry-table td {
-            padding: 4px 2px;
-        }
-
-        .metric-label {
-            color: #94a3b8;
-        }
-
-        .metric-value {
-            text-align: right;
-            font-weight: 600;
-            color: #38bdf8;
-            font-family: monospace;
-            font-size: 12px;
-        }
-
-        .metric-unit {
-            color: #64748b;
-            font-size: 10px;
-            margin-left: 2px;
-        }
-
-        .last-update {
-            margin-top: 8px;
-            font-size: 10px;
-            color: #64748b;
-            text-align: right;
-        }
-
-        /* Toast Notification Container */
-        #toast-container {
-            position: fixed;
-            top: 16px;
-            right: 16px;
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            pointer-events: none;
-        }
-
-        .toast {
-            pointer-events: auto;
-            min-width: 260px;
-            max-width: 340px;
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(8px);
-            color: #f8fafc;
-            padding: 12px 16px;
-            border-radius: 6px;
-            border-left: 4px solid #3b82f6;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            font-size: 13px;
-            transform: translateX(120%);
-            opacity: 0;
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
-        }
-
-        .toast.show {
-            transform: translateX(0);
-            opacity: 1;
-        }
-
-        .toast.hide {
-            transform: translateX(120%);
-            opacity: 0;
-        }
-
-        /* Toast Variants */
-        .toast-success {
-            border-left-color: #10b981;
-        }
-
-        .toast-error {
-            border-left-color: #ef4444;
-        }
-
-        .toast-info {
-            border-left-color: #3b82f6;
-        }
-
-        .toast-warning {
-            border-left-color: #f59e0b;
-        }
-
-        .toast-close {
-            background: transparent;
-            border: none;
-            color: #94a3b8;
-            cursor: pointer;
-            font-size: 14px;
-            line-height: 1;
-        }
-
-        .toast-close:hover {
-            color: #f8fafc;
-        }
-
-        /* Container Wrapper Icon */
-        .scada-node-wrapper {
-            position: relative;
-            pointer-events: none;
-            /* Biarkan klik tembus ke elemen di dalamnya */
-        }
-
-        /* Pin / Titik Utama */
-        .marker-pin {
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            border: 2px solid #ffffff;
-            box-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
-            position: absolute;
-            top: 0;
-            left: 0;
-            pointer-events: auto;
-            cursor: pointer;
-            transform: translate(-50%, -50%);
-            z-index: 2;
-        }
-
-        /* Garis Penghubung (Leader Line) */
-        .leader-line {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 45px;
-            /* Panjang garis horizontal */
-            height: 2px;
-            background: rgba(255, 255, 255, 0.7);
-            transform-origin: left center;
-            z-index: 1;
-        }
-
-        /* Card Label Kaca (Frosted Glass) */
-        .node-label-card {
-            position: absolute;
-            left: 45px;
-            /* Mengikuti panjang garis */
-            top: 0;
-            transform: translateY(-50%);
-
-            background: rgba(15, 23, 42, 0.75);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 6px;
-            padding: 4px 10px;
-
-            display: flex;
-            align-items: center;
-            gap: 8px;
-
-            white-space: nowrap;
-            color: #f8fafc;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
-
-            pointer-events: auto;
-            cursor: pointer;
-            user-select: none;
-            transition: transform 0.2s ease, background 0.2s ease;
-        }
-
-        .node-label-card:hover {
-            background: rgba(30, 41, 59, 0.9);
-            border-color: #38bdf8;
-            transform: translateY(-50%) scale(1.04);
-        }
-
-        .card-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-
-        .card-title {
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: 0.3px;
-        }
+        /* Toasts */
+        #toast-container { position: fixed; top: 16px; right: 16px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .toast { pointer-events: auto; min-width: 260px; background: rgba(15, 23, 42, 0.95); color: #f8fafc; padding: 12px 16px; border-radius: 6px; border-left: 4px solid #3b82f6; display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13px; transform: translateX(120%); transition: transform 0.3s ease; }
+        .toast.show { transform: translateX(0); }
+        .toast-success { border-left-color: #10b981; } .toast-error { border-left-color: #ef4444; }
     </style>
 </head>
 
 <body>
 
-    <!-- =========================================
-     SCADA SIDEBAR
-     ========================================= -->
-
     <aside id="scada-sidebar" class="scada-sidebar">
-
-        <div class="sidebar-title">
-            <strong>SCADA MONITOR</strong>
-        </div>
-
-        <!-- Connection -->
+        <div class="sidebar-title"><strong>SCADA MONITOR</strong></div>
         <div class="status-indicator">
-            <div id="conn-dot" class="dot"></div>
-            <span id="conn-status">Connected</span>
+            <div id="conn-dot" class="dot"></div><span id="conn-status">Connected</span>
         </div>
-
-        <!-- Information -->
         <div class="sidebar-info">
-
-            <div class="sidebar-item">
-                <span>Nodes Active</span>
-
-                <span id="node-count" class="sidebar-value">
-                    0
-                </span>
-            </div>
-
-            <div class="sidebar-item">
-                <span>Last Sync</span>
-
-                <span id="last-sync" class="sidebar-value">
-                    -
-                </span>
-            </div>
-
+            <div class="sidebar-item"><span>Nodes Active</span><span id="node-count" class="sidebar-value">0</span></div>
+            <div class="sidebar-item"><span>Last Sync</span><span id="last-sync" class="sidebar-value">-</span></div>
         </div>
-
-        <!-- Config -->
-        <button class="btn-config" onclick="openConfigModal()">
-            ⚙ Kelola Node & DB
-        </button>
-
+        <button class="btn-config" onclick="openConfigModal()">⚙ Kelola Node & DB</button>
     </aside>
 
-    <!-- Toggle Button -->
-
-    <button id="sidebar-toggle" class="sidebar-toggle open" onclick="toggleSidebar()" aria-label="Toggle Sidebar">
-
-        ◀
-
-    </button>
+    <button id="sidebar-toggle" class="sidebar-toggle open" onclick="toggleSidebar()">◀</button>
 
     <div id="map"></div>
 
+    <!-- MODAL KONFIGURASI -->
     <div id="config-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Konfigurasi Node & Mapping Database</h3>
-                <button onclick="closeConfigModal()" class="btn-danger" style="padding: 2px 8px;">✕</button>
+                <div class="modal-tabs">
+                    <button id="tab-btn-nodes" class="active" onclick="switchTab('nodes')">📍 Lokasi Node</button>
+                    <button id="tab-btn-mqtt" onclick="switchTab('mqtt')">📡 Koneksi MQTT</button>
+                </div>
+                <button onclick="closeConfigModal()" class="btn-danger" style="padding: 4px 10px; font-weight:bold;">✕</button>
             </div>
-            <div class="modal-body" id="modal-nodes-container"></div>
+            
+            <!-- Area Render Content Tab -->
+            <div class="modal-body" id="tab-content-nodes"></div>
+            <div class="modal-body" id="tab-content-mqtt" style="display: none;"></div>
+
             <div class="modal-footer">
-                <button class="btn-secondary" onclick="addNewNode()">+ Tambah Lokasi Node</button>
+                <!-- Footer Kiri dinamis -->
+                <div id="footer-left-actions">
+                    <button class="btn-secondary" onclick="addNewNode()">+ Tambah Node</button>
+                </div>
+                <!-- Footer Kanan statis -->
                 <button class="btn-success" onclick="saveConfiguration()">Simpan & Terapkan</button>
             </div>
         </div>
@@ -729,106 +353,46 @@
 
     <div id="toast-container"></div>
 
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Leaflet JS Offline -->
+    <script src="/static/js/leaflet.js"></script>
     <script>
-        function toggleSidebar() {
+        // Data State Global
+        let activeConfig = null;
+        let currentTab = 'nodes';
 
+        // --- MAP LOGIC ---
+        function toggleSidebar() {
             const sidebar = document.getElementById('scada-sidebar');
             const toggle = document.getElementById('sidebar-toggle');
-
             const isHidden = sidebar.classList.toggle('hidden');
-
             toggle.classList.toggle('open', !isHidden);
-
             toggle.innerHTML = isHidden ? '▶' : '◀';
         }
 
-        // 1. Inisialisasi Map
-        const map = L.map('map', {
-            center: [-7.0694, 107.7083],
-            zoom: 18,
-            zoomControl: false,
-            preferCanvas: true
-        });
-
-        // Pindahkan Zoom Control ke kanan bawah agar tidak tertutup SCADA Header
+        const map = L.map('map', { center: [-6.17418, 106.70674], zoom: 12, zoomControl: false, preferCanvas: true });
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-        // 2. Tile Layer: Google Satellite Murni (lyrs=s)
-        L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-            maxZoom: 21,
-            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-            attribution: 'Google Satellite'
+        L.tileLayer('http://localhost:8081/data/semanan_map/{z}/{x}/{y}.png', {
+            minZoom: 11, maxZoom: 13, attribution: '&copy; Local Offline Map'
         }).addTo(map);
 
-        // 3. Tile Layer: CartoDB Labels (Overlay Transparan di atas satelit)
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
-            subdomains: 'abcd',
-            maxZoom: 21,
-            pane: 'overlayPane'
-        }).addTo(map);
-
-        // 4. State Management (Marker Cache)
         const markerCache = {};
-
         let hasInitialFit = false;
 
-        function fitMapToNodes(nodes) {
-            if (!nodes || nodes.length === 0) return;
-
-            // Kumpulkan semua koordinat node yang valid
-            const latLngs = nodes
-                .filter(n => typeof n.lat === 'number' && typeof n.lng === 'number' && !isNaN(n.lat) && !isNaN(n.lng))
-                .map(n => [n.lat, n.lng]);
-
-            if (latLngs.length === 0) return;
-
-            const bounds = L.latLngBounds(latLngs);
-
-            // Otomatis atur center & zoom level dengan padding agar marker di pinggir tidak terpotong
-            map.fitBounds(bounds, {
-                padding: [60, 60], // Jarak margin aman dalam pixel dari tepi layar
-                maxZoom: 18,       // Batas maksimal zoom jika semua node terlalu berdekatan
-                animate: true,
-                duration: 0.8
-            });
-        }
-
-        function getPinClass(status) {
-            const s = (status || '').toUpperCase();
-            if (s === 'ON') return 'pin-on';
-            if (s === 'OFF') return 'pin-off';
-            return 'pin-filled';
-        }
-
-        function getBadgeClass(status) {
-            const s = (status || '').toUpperCase();
-            if (s === 'ON') return 'badge-on';
-            if (s === 'OFF') return 'badge-off';
-            return 'badge-filled';
-        }
+        function getPinClass(status) { return (status || '').toUpperCase() === 'ON' ? 'pin-on' : 'pin-off'; }
+        function getBadgeClass(status) { return (status || '').toUpperCase() === 'ON' ? 'badge-on' : 'badge-off'; }
 
         function createIcon(node) {
             const pinClass = getPinClass(node.status);
             return L.divIcon({
                 className: 'scada-node-wrapper',
                 html: `
-            <!-- Titik Lokasi -->
-            <div class="marker-pin ${pinClass}"></div>
-            
-            <!-- Garis Penghubung -->
-            <div class="leader-line"></div>
-            
-            <!-- Card Label -->
-            <div class="node-label-card">
-                <div class="card-dot ${pinClass}"></div>
-                <span class="card-title">${node.name || 'Node'}</span>
-            </div>
-        `,
-                iconSize: [0, 0],       // Titik koordinat tepat di anchor tengah (0,0)
-                iconAnchor: [0, 0],
-                popupAnchor: [0, -10]
+                    <div class="marker-pin ${pinClass}"></div>
+                    <div class="leader-line"></div>
+                    <div class="node-label-card">
+                        <div class="card-dot ${pinClass}"></div><span class="card-title">${node.name || 'Node'}</span>
+                    </div>`,
+                iconSize: [0, 0], iconAnchor: [0, 0], popupAnchor: [0, -10]
             });
         }
 
@@ -837,44 +401,22 @@
             if (node.json_data) {
                 for (const [key, metric] of Object.entries(node.json_data)) {
                     let val = metric.value;
-                    if (typeof val === 'number') {
-                        val = Number.isInteger(val) ? val.toLocaleString('id-ID') : val.toFixed(3);
-                    }
-                    metricsRows += `
-        <tr>
-          <td class="metric-label">${metric.label}</td>
-          <td class="metric-value">
-            <span class="val-text" data-metric="${key}">${val}</span> 
-            <span class="metric-unit">${metric.unit || ''}</span>
-          </td>
-        </tr>`;
+                    if (typeof val === 'number') val = Number.isInteger(val) ? val.toLocaleString('id-ID') : val.toFixed(3);
+                    metricsRows += `<tr><td class="metric-label">${metric.label}</td><td class="metric-value"><span class="val-text" data-metric="${key}">${val}</span> <span class="metric-unit">${metric.unit || ''}</span></td></tr>`;
                 }
             }
-
-            return `
-                <div class="popup-box" data-node-id="${node.id}">
-                <div class="popup-header">
-                    <span class="popup-title">${node.name}</span>
-                    <span class="badge ${getBadgeClass(node.status)} status-badge">${node.status}</span>
-                </div>
-                <table class="telemetry-table">
-                    <tbody>${metricsRows}</tbody>
-                </table>
-                <div class="last-update node-timestamp">Updated: ${node.last_updated}</div>
-                </div>
-            `;
+            return `<div class="popup-box" data-node-id="${node.id}">
+                <div class="popup-header"><span class="popup-title">${node.name}</span><span class="badge ${getBadgeClass(node.status)} status-badge">${node.status}</span></div>
+                <table class="telemetry-table"><tbody>${metricsRows}</tbody></table>
+                <div class="last-update node-timestamp">Updated: ${node.last_updated}</div></div>`;
         }
 
-        // 5. Update Marker Realtime tanpa merusak DOM / Map State
         function renderNodes(nodes) {
             document.getElementById('node-count').innerText = nodes.length;
             const currentIds = new Set(nodes.map(n => n.id));
 
             Object.keys(markerCache).forEach(id => {
-                if (!currentIds.has(id)) {
-                    map.removeLayer(markerCache[id]);
-                    delete markerCache[id];
-                }
+                if (!currentIds.has(id)) { map.removeLayer(markerCache[id]); delete markerCache[id]; }
             });
 
             nodes.forEach(node => {
@@ -884,63 +426,43 @@
                     marker.setIcon(createIcon(node));
 
                     if (marker.isPopupOpen()) {
-                        // AMBIL CONTAINER POPUP YANG SEDANG DIBUKA DI LAYAR
                         const popupEl = marker.getPopup().getElement();
                         if (popupEl) {
-                            // 1. Update Status Badge
                             const badgeEl = popupEl.querySelector('.status-badge');
-                            if (badgeEl) {
-                                badgeEl.className = `badge ${getBadgeClass(node.status)} status-badge`;
-                                badgeEl.innerText = node.status;
-                            }
-
-                            // 2. Update Nilai Tiap Metrik Tanpa Reset DOM
+                            if (badgeEl) { badgeEl.className = `badge ${getBadgeClass(node.status)} status-badge`; badgeEl.innerText = node.status; }
                             if (node.json_data) {
                                 for (const [key, metric] of Object.entries(node.json_data)) {
                                     const valEl = popupEl.querySelector(`[data-metric="${key}"]`);
                                     if (valEl) {
                                         let val = metric.value;
-                                        if (typeof val === 'number') {
-                                            val = Number.isInteger(val) ? val.toLocaleString('id-ID') : val.toFixed(3);
-                                        }
+                                        if (typeof val === 'number') val = Number.isInteger(val) ? val.toLocaleString('id-ID') : val.toFixed(3);
                                         valEl.innerText = val;
                                     }
                                 }
                             }
-
-                            // 3. Update Timestamp
                             const timeEl = popupEl.querySelector('.node-timestamp');
-                            if (timeEl) {
-                                timeEl.innerText = `Updated: ${node.last_updated}`;
-                            }
+                            if (timeEl) timeEl.innerText = `Updated: ${node.last_updated}`;
                         }
-                    } else {
-                        // Jika popup sedang tertutup, update template HTML-nya
-                        marker.setPopupContent(buildPopupHTML(node));
-                    }
+                    } else { marker.setPopupContent(buildPopupHTML(node)); }
                 } else {
-                    const marker = L.marker([node.lat, node.lng], { icon: createIcon(node) })
-                        .bindPopup(buildPopupHTML(node), { className: 'scada-popup' })
-                        .addTo(map);
-                    markerCache[node.id] = marker; //[cite: 1]
+                    markerCache[node.id] = L.marker([node.lat, node.lng], { icon: createIcon(node) })
+                        .bindPopup(buildPopupHTML(node), { className: 'scada-popup' }).addTo(map);
                 }
-
             });
 
             if (!hasInitialFit && nodes.length > 0) {
-                fitMapToNodes(nodes);
-                hasInitialFit = true;
+                const latLngs = nodes.filter(n => typeof n.lat === 'number' && !isNaN(n.lat)).map(n => [n.lat, n.lng]);
+                if (latLngs.length > 0) {
+                    map.fitBounds(L.latLngBounds(latLngs), { padding: [60, 60], maxZoom: 18, animate: true });
+                    hasInitialFit = true;
+                }
             }
         }
 
-        // 6. Fetch Loop ke Server Go / API Endpoint
-        const API_URL = '/api/nodes';
-
         async function fetchTelemetry() {
             try {
-                const response = await fetch(API_URL);
+                const response = await fetch('/api/nodes');
                 if (!response.ok) throw new Error('Network error');
-
                 const data = await response.json();
                 if (data.success && data.nodes) {
                     renderNodes(data.nodes);
@@ -954,49 +476,70 @@
             }
         }
 
-        // ================= CONFIG EDITOR UI LOGIC =================
+        // --- CONFIG UI LOGIC ---
         async function openConfigModal() {
             try {
                 const res = await fetch('/api/config');
                 const data = await res.json();
                 if (data.success) {
                     activeConfig = data.config;
-                    renderConfigEditor();
+                    if (!activeConfig.mqtt_connections) activeConfig.mqtt_connections = {};
+                    
+                    renderConfigEditor(); // Render nodes
+                    renderMQTTEditor();   // Render MQTT
                     document.getElementById('config-modal').style.display = 'flex';
                 }
-            } catch (err) {
-                showToast('Gagal memuat konfigurasi: ' + err.message, 'error');
+            } catch (err) { showToast('Gagal memuat konfigurasi', 'error'); }
+        }
+
+        function closeConfigModal() { document.getElementById('config-modal').style.display = 'none'; }
+
+        function switchTab(tabName) {
+            currentTab = tabName;
+            document.getElementById('tab-btn-nodes').className = tabName === 'nodes' ? 'active' : '';
+            document.getElementById('tab-btn-mqtt').className = tabName === 'mqtt' ? 'active' : '';
+            
+            document.getElementById('tab-content-nodes').style.display = tabName === 'nodes' ? 'flex' : 'none';
+            document.getElementById('tab-content-mqtt').style.display = tabName === 'mqtt' ? 'flex' : 'none';
+
+            // Ubah tombol dinamis di footer
+            const footerLeft = document.getElementById('footer-left-actions');
+            if (tabName === 'nodes') {
+                footerLeft.innerHTML = `<button class="btn-secondary" onclick="addNewNode()">+ Tambah Lokasi Node</button>`;
+            } else {
+                footerLeft.innerHTML = `<button class="btn-secondary" onclick="addNewMQTT()">+ Tambah Broker MQTT</button>`;
             }
         }
 
-        function closeConfigModal() {
-            document.getElementById('config-modal').style.display = 'none';
-        }
-
+        // --- RENDER TAB NODES ---
         function renderConfigEditor() {
-            const container = document.getElementById('modal-nodes-container');
+            const container = document.getElementById('tab-content-nodes');
             container.innerHTML = '';
+
+            // Generate opsi dropdown MQTT dari state aktif
+            const mqttKeys = Object.keys(activeConfig.mqtt_connections || {});
+            const mqttOptionsHTML = mqttKeys.length > 0 
+                ? mqttKeys.map(k => `<option value="${k}">${k}</option>`).join('')
+                : `<option value="">-- Belum ada broker --</option>`;
 
             activeConfig.nodes.forEach((node, nodeIdx) => {
                 const nodeDiv = document.createElement('div');
                 nodeDiv.className = 'node-card';
-                nodeDiv.dataset.nodeIdx = nodeIdx;
 
                 let metricsHTML = '';
-                const metrics = node.metrics || {};
-                Object.entries(metrics).forEach(([mKey, mVal]) => {
+                Object.entries(node.metrics || {}).forEach(([mKey, mVal]) => {
                     metricsHTML += `
                         <div class="metric-row">
                             <input class="form-control m-key" placeholder="Key ID" value="${mKey}">
                             <input class="form-control m-label" placeholder="Label / Tag" value="${mVal.label || ''}">
-                            <input class="form-control m-table" placeholder="Table" value="${mVal.table || ''}">
-                            <input class="form-control m-col" placeholder="Column" value="${mVal.column || ''}">
+                            <input class="form-control m-table" placeholder="Table DB" value="${mVal.table || ''}">
+                            <input class="form-control m-col" placeholder="Column/JSON Tag" value="${mVal.column || ''}">
                             <input class="form-control m-unit" placeholder="Unit" value="${mVal.unit || ''}">
                             <button class="btn-danger" onclick="this.parentElement.remove()">✕</button>
-                        </div>
-                    `;
+                        </div>`;
                 });
 
+                const ds = node.data_source || 'db';
                 nodeDiv.innerHTML = `
                     <div style="display:flex; justify-content:space-between; margin-bottom: 8px;">
                         <strong style="color:#38bdf8;">Node: ${node.name || 'Baru'}</strong>
@@ -1007,7 +550,29 @@
                         <div class="form-group"><label>Nama Lokasi</label><input class="form-control n-name" value="${node.name || ''}"></div>
                         <div class="form-group"><label>Latitude</label><input type="number" step="any" class="form-control n-lat" value="${node.lat}"></div>
                         <div class="form-group"><label>Longitude</label><input type="number" step="any" class="form-control n-lng" value="${node.lng}"></div>
-                        <div class="form-group"><label>Status</label><input class="form-control n-status" value="${node.status_source || 'ON'}"></div>
+                        
+                        <div class="form-group">
+                            <label>Sumber Data</label>
+                            <select class="form-control n-source" onchange="toggleNodeSource(this)">
+                                <option value="db" ${ds === 'db' ? 'selected' : ''}>Database MySQL</option>
+                                <option value="mqtt" ${ds === 'mqtt' ? 'selected' : ''}>MQTT Broker</option>
+                            </select>
+                        </div>
+
+                        <!-- KELOMPOK STATUS -->
+                        <div class="form-group"><label>Status (ON/OFF/Tag)</label><input class="form-control n-status" value="${node.status_source || ''}" placeholder="Kosongi utk baca timeout"></div>
+                        <div class="form-group"><label>Timeout Mati (Detik)</label><input type="number" class="form-control n-timeout" value="${node.status_timeout || 0}" placeholder="0 = disable"></div>
+                        
+                        <div class="form-group n-mqtt-group" style="${ds === 'mqtt' ? 'display:block' : 'display:none'}">
+                            <label>Koneksi MQTT</label>
+                            <select class="form-control n-mqtt-conn" data-selected="${node.mqtt_connection || ''}">
+                                ${mqttOptionsHTML}
+                            </select>
+                        </div>
+                        <div class="form-group n-mqtt-group" style="${ds === 'mqtt' ? 'display:block' : 'display:none'}">
+                            <label>Topik Node Khusus</label>
+                            <input class="form-control n-mqtt-topic" placeholder="e.g. telemetry/area1/data" value="${node.mqtt_topic || ''}">
+                        </div>
                     </div>
                     <div style="margin-top: 8px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
@@ -1018,47 +583,99 @@
                     </div>
                 `;
                 container.appendChild(nodeDiv);
+
+                // Set value for dynamic select manually after rendering HTML
+                if (ds === 'mqtt' && node.mqtt_connection) {
+                    nodeDiv.querySelector('.n-mqtt-conn').value = node.mqtt_connection;
+                }
             });
         }
 
-        function addNewNode() {
-            activeConfig.nodes.push({
-                id: 'node_' + Date.now(),
-                name: 'Node Baru',
-                lat: -7.0694,
-                lng: 107.7083,
-                status_source: 'ON',
-                metrics: {}
-            });
-            renderConfigEditor();
+        function toggleNodeSource(selectEl) {
+            const groups = selectEl.closest('.node-grid').querySelectorAll('.n-mqtt-group');
+            groups.forEach(g => g.style.display = selectEl.value === 'mqtt' ? 'block' : 'none');
         }
 
         function addMetricRow(btn) {
             const container = btn.closest('.node-card').querySelector('.metrics-container');
             const row = document.createElement('div');
             row.className = 'metric-row';
-            row.innerHTML = `
-                <input class="form-control m-key" placeholder="Key ID (e.g. ph)" value="metric_${Date.now().toString().slice(-4)}">
-                <input class="form-control m-label" placeholder="Label / Tag" value="">
-                <input class="form-control m-table" placeholder="Table" value="">
-                <input class="form-control m-col" placeholder="Column" value="">
-                <input class="form-control m-unit" placeholder="Unit" value="">
-                <button class="btn-danger" onclick="this.parentElement.remove()">✕</button>
-            `;
+            row.innerHTML = `<input class="form-control m-key" placeholder="Key ID"><input class="form-control m-label" placeholder="Label"><input class="form-control m-table" placeholder="Table"><input class="form-control m-col" placeholder="Column/JSON Tag"><input class="form-control m-unit" placeholder="Unit"><button class="btn-danger" onclick="this.parentElement.remove()">✕</button>`;
             container.appendChild(row);
         }
 
-        async function saveConfiguration() {
-            const nodeCards = document.querySelectorAll('.node-card');
-            const updatedNodes = [];
+        function addNewNode() {
+            activeConfig.nodes.push({ id: 'node_' + Date.now(), name: 'Node Baru', lat: -6.17, lng: 106.7, data_source: 'db', metrics: {} });
+            renderConfigEditor();
+        }
 
-            nodeCards.forEach(card => {
+        // --- RENDER TAB MQTT ---
+        function renderMQTTEditor() {
+            const container = document.getElementById('tab-content-mqtt');
+            container.innerHTML = '';
+
+            Object.entries(activeConfig.mqtt_connections || {}).forEach(([connID, cfg]) => {
+                const mDiv = document.createElement('div');
+                mDiv.className = 'mqtt-card';
+                mDiv.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; margin-bottom: 8px;">
+                        <strong style="color:#10b981;">ID Koneksi: ${connID}</strong>
+                        <button class="btn-danger" style="font-size:11px;" onclick="this.closest('.mqtt-card').remove()">Hapus Broker</button>
+                    </div>
+                    <div class="mqtt-grid">
+                        <div class="form-group"><label>ID Koneksi (Key)</label><input class="form-control mq-id" value="${connID}" readonly style="background:#334155; cursor:not-allowed;"></div>
+                        <div class="form-group"><label>Broker URL / IP</label><input class="form-control mq-broker" value="${cfg.broker || ''}"></div>
+                        <div class="form-group"><label>Port</label><input type="number" class="form-control mq-port" value="${cfg.port || 1883}"></div>
+                        <div class="form-group"><label>Client ID</label><input class="form-control mq-client" value="${cfg.client_id || ''}"></div>
+                        <div class="form-group"><label>Username</label><input class="form-control mq-user" value="${cfg.user || ''}"></div>
+                        <div class="form-group"><label>Password</label><input type="password" class="form-control mq-pass" value="${cfg.password || ''}"></div>
+                        <div class="form-group"><label>Global Topic (Wildcard)</label><input class="form-control mq-topic" value="${cfg.topic || '#'}"></div>
+                        <div class="form-group"><label>Status Enabled</label>
+                            <select class="form-control mq-enabled">
+                                <option value="true" ${cfg.enabled ? 'selected' : ''}>Aktif (True)</option>
+                                <option value="false" ${!cfg.enabled ? 'selected' : ''}>Mati (False)</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(mDiv);
+            });
+        }
+
+        function addNewMQTT() {
+            const newID = 'broker_' + Math.floor(Math.random() * 1000);
+            activeConfig.mqtt_connections[newID] = { enabled: true, broker: "tcp://localhost", port: 1883, topic: "telemetry/#", client_id: newID };
+            renderMQTTEditor();
+            // Juga render ulang nodes agar opsi dropdown baru muncul di tab Nodes
+            renderConfigEditor();
+        }
+
+        // --- SAVE ALL LOGIC ---
+        async function saveConfiguration() {
+            // 1. Ekstrak data MQTT
+            const newMqttConns = {};
+            document.querySelectorAll('.mqtt-card').forEach(card => {
+                const id = card.querySelector('.mq-id').value.trim();
+                newMqttConns[id] = {
+                    enabled: card.querySelector('.mq-enabled').value === 'true',
+                    broker: card.querySelector('.mq-broker').value.trim(),
+                    port: parseInt(card.querySelector('.mq-port').value) || 1883,
+                    client_id: card.querySelector('.mq-client').value.trim(),
+                    user: card.querySelector('.mq-user').value.trim(),
+                    password: card.querySelector('.mq-pass').value.trim(),
+                    topic: card.querySelector('.mq-topic').value.trim()
+                };
+            });
+            activeConfig.mqtt_connections = newMqttConns;
+
+            // 2. Ekstrak data Nodes
+            const updatedNodes = [];
+            document.querySelectorAll('.node-card').forEach(card => {
                 const id = card.querySelector('.n-id').value.trim();
                 const name = card.querySelector('.n-name').value.trim();
-                const lat = parseFloat(card.querySelector('.n-lat').value);
-                const lng = parseFloat(card.querySelector('.n-lng').value);
-                const status = card.querySelector('.n-status').value.trim();
-
+                const ds = card.querySelector('.n-source').value;
+                const statusSource = card.querySelector('.n-status').value.trim();
+                const statusTimeout = parseInt(card.querySelector('.n-timeout').value) || 0;
                 const metrics = {};
                 card.querySelectorAll('.metric-row').forEach(row => {
                     const key = row.querySelector('.m-key').value.trim();
@@ -1072,11 +689,21 @@
                     }
                 });
 
-                updatedNodes.push({ id, name, lat, lng, status_source: status, metrics });
+                updatedNodes.push({
+                    id, name,
+                    lat: parseFloat(card.querySelector('.n-lat').value),
+                    lng: parseFloat(card.querySelector('.n-lng').value),
+                    status_source: statusSource,
+                    status_timeout: statusTimeout, // Masukkan ke object JSON
+                    data_source: ds,
+                    mqtt_connection: ds === 'mqtt' ? card.querySelector('.n-mqtt-conn').value : "",
+                    mqtt_topic: ds === 'mqtt' ? card.querySelector('.n-mqtt-topic').value.trim() : "",
+                    metrics
+                });
             });
-
             activeConfig.nodes = updatedNodes;
 
+            // 3. Post to API
             try {
                 const res = await fetch('/api/config', {
                     method: 'POST',
@@ -1088,63 +715,26 @@
                     showToast('Konfigurasi berhasil disimpan!', 'success');
                     closeConfigModal();
                     fetchTelemetry();
-                } else {
-                    showToast(result.message || 'Gagal menyimpan', 'error');
-                }
-            } catch (err) {
-                showToast('Gagal menghubungi server: ' + err.message, 'error');
-            }
+                } else { showToast(result.message || 'Gagal menyimpan', 'error'); }
+            } catch (err) { showToast('Gagal menghubungi server', 'error'); }
         }
 
-        function showToast(message, type = 'info', duration = 3500) {
-            const container = document.getElementById('toast-container');
-
+        // --- TOAST NOTIFICATIONS ---
+        function showToast(message, type = 'info') {
             const toast = document.createElement('div');
             toast.className = `toast toast-${type}`;
-
-            const icons = {
-                success: '✓',
-                error: '✕',
-                warning: '⚠',
-                info: 'ℹ'
-            };
-
-            toast.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-weight: bold;">${icons[type] || 'ℹ'}</span>
-            <span>${message}</span>
-        </div>
-        <button class="toast-close" onclick="dismissToast(this.parentElement)">✕</button>
-    `;
-
-            container.appendChild(toast);
-
-            // Trigger animasi slide in
-            requestAnimationFrame(() => {
-                toast.classList.add('show');
-            });
-
-            // Timer slide out
-            const hideTimeout = setTimeout(() => {
-                dismissToast(toast);
-            }, duration);
-
-            toast.dataset.timeoutId = hideTimeout;
+            toast.innerHTML = `<div style="display:flex;gap:8px;"><span>${type==='success'?'✓':'✕'}</span><span>${message}</span></div>`;
+            document.getElementById('toast-container').appendChild(toast);
+            requestAnimationFrame(() => toast.classList.add('show'));
+            setTimeout(() => {
+                toast.classList.remove('show');
+                toast.addEventListener('transitionend', () => toast.remove());
+            }, 3000);
         }
 
-        function dismissToast(toast) {
-            if (!toast || toast.classList.contains('hide')) return;
-            clearTimeout(toast.dataset.timeoutId);
-            toast.classList.remove('show');
-            toast.classList.add('hide');
-            toast.addEventListener('transitionend', () => {
-                toast.remove();
-            }, { once: true });
-        }
-
+        // Init
         fetchTelemetry();
         setInterval(fetchTelemetry, 5000);
     </script>
 </body>
-
 </html>

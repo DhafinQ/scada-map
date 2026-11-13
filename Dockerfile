@@ -16,7 +16,10 @@ RUN apk --no-cache add ca-certificates tzdata
 ENV TZ=Asia/Jakarta
 
 COPY --from=builder /app/server .
-COPY index.html config.html ./
+COPY --from=builder /app/index.html .
+COPY --from=builder /app/config.html .
+COPY --from=builder /app/config.json .
+COPY --from=builder /app/static ./static
 
 EXPOSE 8080
 CMD ["./server"]

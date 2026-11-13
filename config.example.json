@@ -7,14 +7,25 @@
     "password": "",
     "database": ""
   },
-  "mqtt": {
-    "enabled": true,
-    "broker": "tcp://host.docker.internal",
-    "port": 1883,
-    "client_id": "scada_map_backend",
-    "user": "",
-    "password": "",
-    "topic": "wtp/telemetry/data"
+  "mqtt_connections": {
+    "broker_cloud": {
+      "enabled": true,
+      "broker": "tcp://broker.hivemq.com",
+      "port": 1883,
+      "client_id": "scada_map_backend_2",
+      "user": "",
+      "password": "",
+      "topic": "wtp/telemetry/data"
+    },
+    "broker_lokal": {
+      "enabled": true,
+      "broker": "tcp://host.docker.internal",
+      "port": 1884,
+      "client_id": "scada_map_backend_1",
+      "user": "",
+      "password": "",
+      "topic": "wtp/telemetry/data"
+    }
   },
   "nodes": [
     {

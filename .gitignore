@@ -35,3 +35,5 @@ Thumbs.db
 *.log
 tmp/
 temp/
+tiles/*.mbtiles
+!tiles/.gitkeep

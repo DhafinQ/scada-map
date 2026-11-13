@@ -7,7 +7,7 @@
     <title>SCADA Map Monitoring System</title>
 
     <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="/static/css/leaflet.css" />
 
     <style>
         * {
@@ -711,7 +711,7 @@
     <div id="toast-container"></div>
 
     <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/static/js/leaflet.js"></script>
     <script>
         function toggleSidebar() {
 
@@ -727,28 +727,28 @@
 
         // 1. Inisialisasi Map
         const map = L.map('map', {
-            center: [-7.0694, 107.7083],
-            zoom: 18,
-            zoomControl: false,
-            preferCanvas: true
+            center: [-6.17418, 106.70674], // Koordinat pusat (contoh: Semanan)
+            zoom: 12,                      // Default zoom awal
+            minZoom: 11,                   // Sesuai batas minimum QGIS
+            maxZoom: 13                    // Sesuai batas maksimum QGIS
         });
 
         // Pindahkan Zoom Control ke kanan bawah agar tidak tertutup SCADA Header
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
         // 2. Tile Layer: Google Satellite Murni (lyrs=s)
-        L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-            maxZoom: 21,
-            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-            attribution: 'Google Satellite'
+        L.tileLayer('http://localhost:8081/data/semanan_map/{z}/{x}/{y}.png', {
+            minZoom: 11,
+            maxZoom: 13,
+            attribution: '&copy; Local Offline Map'
         }).addTo(map);
 
         // 3. Tile Layer: CartoDB Labels (Overlay Transparan di atas satelit)
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
-            subdomains: 'abcd',
-            maxZoom: 21,
-            pane: 'overlayPane'
-        }).addTo(map);
+        // L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
+        //     subdomains: 'abcd',
+        //     maxZoom: 21,
+        //     pane: 'overlayPane'
+        // }).addTo(map);
 
         // 4. State Management (Marker Cache)
         const markerCache = {};

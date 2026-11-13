@@ -13,3 +13,11 @@ services:
     extra_hosts:
       # Memungkinkan container mengakses MySQL yang berjalan di host mesin
       - "host.docker.internal:host-gateway"
+  tileserver:
+    image: maptiler/tileserver-gl
+    ports:
+      - "8081:8080"
+    volumes:
+      # Mount folder tiles lokal ke folder /data di dalam container
+      - ./tiles:/data
+    restart: always
